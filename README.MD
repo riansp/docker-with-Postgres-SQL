@@ -1,74 +1,105 @@
-# CRM Complaints Analysis 
+# 🚀 CRM Complaints Analysis -- Data Engineer Test Case
 
-This project demonstrates a data engineering workflow to analyze CRM complaints and call center logs. The goal is to calculate the average resolution time of complaints across different dimensions (product, issue type, agent) and present insights in a summarized form.
+This project uses **PostgreSQL with Docker** (via Play with Docker /
+PWD) to ingest CSV data and run analytical queries.
 
-1. Tech Stack
+## 📂 Project Structure
 
-PostgreSQL (containerized via Docker)
-Docker Compose for orchestration
-Python + Pandas (for initial data preprocessing if needed)
-SQL for data transformation and aggregation
-Matplotlib / Tableau (optional for visualization)
+    docker-with-Postgres-SQL/
+    │── docker-compose.yml
+    │── data/
+    │   ├── CRMEvents.csv
+    │   ├── CRMCallCenterLogs.csv
+    │── queries/
+    │   ├── avg_agent.sql
+    │   ├── avg_product.sql
+    │   ├── avg_res_time.sql
+    │   ├── top_issue.sql
+    │── init/
+    │   └── init.sql
+    │── README.md
 
-2. Project Structure
+------------------------------------------------------------------------
 
-├── docker-compose.yml      # Docker services (Postgres, Adminer)
-├── init.sql                # Schema creation
-├── load_data.sh            # Script to load CSV data into Postgres
-├── CRMEvents.csv           # Source data (CRM events)
-├── CRMCallCenterLogs.csv   # Source data (CRM call logs)
-├── queries.sql             # Example analytical queries
-└── README.md               # Documentation
+## ⚙️ 1. Setup Environment on Play with Docker (PWD)
 
-3. Setup Instructions
+1.  Open [Play with Docker](https://labs.play-with-docker.com/).\
+2.  Start a new instance.\
+3.  Clone the repository from GitHub:
 
-Step 1 – Start PostgreSQL with Docker
+``` bash
+git clone https://github.com/riansp/docker-with-Postgres-SQL.git
+cd docker-with-Postgres-SQL
+```
 
-bash
-docker-compose up -d
+------------------------------------------------------------------------
 
+## 🐳 2. Run Docker Compose
 
-This will launch:
+``` bash
+docker compose up -d
+```
 
-PostgreSQL database (localhost:5432)
-Adminer web UI (localhost:8080)
+Check running containers:
 
-Step 2 – Initialize Schema
+``` bash
+docker ps
+```
 
-bash
-docker exec -i crm-postgres psql -U postgres -d crm < init.sql
+You should see the `crm_postgres` service running with port mapping
+`5432:5432`.
 
-Step 3 – Load Data
+------------------------------------------------------------------------
 
-bash
-bash load_data.sh
+## 📥 3. Load CSV Data into Database
 
-This script copies CSV files into the container and loads them into the corresponding tables.
+Import CSV files from the `data/` folder:
 
-Step 4 – Run Queries
+``` bash
+docker exec -i crm_postgres psql -U admin -d crm_db -c "\copy crm_events FROM '/data/CRMEvents.csv' CSV HEADER;"
+docker exec -i crm_postgres psql -U admin -d crm_db -c "\copy crm_call_logs FROM '/data/CRMCallCenterLogs.csv' CSV HEADER;"
+```
 
-bash
-docker exec -it crm-postgres psql -U postgres -d crm -f queries.sql
+Verify the data:
 
-Example output:
+``` bash
+docker exec -i crm_postgres psql -U admin -d crm_db -c "SELECT * FROM crm_events LIMIT 5;"
+```
 
-Average resolution time overall = 11 minutes 39 seconds
-By Issue → Application processing delay takes the longest (15 min 48 sec).
-By Agent → AVNI is the fastest (10 min 20 sec), BENSION the slowest (12 min 46 sec).
+------------------------------------------------------------------------
 
-4. Workflow Summary
+## 📊 4. Run Analytical Queries
 
-1. Data ingestion → Import raw CSV (Excel source) into PostgreSQL.
-2. Data modeling → Create tables for CRM Events & Call Logs.
-3. Data integration → Join both tables on `Complaint_ID`.
-4. Data transformation → Calculate resolution time (seconds → minutes).
-5. Analytics → Aggregate averages by dimensions (Product, Issue, Agent).
-6. Visualization → Charts & slide deck summarizing findings.
+Several SQL scripts are available in the `queries/` folder. Run them as
+follows:
 
-5. Key Insights
+``` bash
+docker exec -i crm_postgres psql -U admin -d crm_db -f /queries/avg_agent.sql
+docker exec -i crm_postgres psql -U admin -d crm_db -f /queries/avg_product.sql
+docker exec -i crm_postgres psql -U admin -d crm_db -f /queries/avg_res_time.sql
+docker exec -i crm_postgres psql -U admin -d crm_db -f /queries/top_issue.sql
+```
 
-Overall resolution is efficient (< 12 minutes).
-Certain issues (e.g., application processing delay) are bottlenecks.
-Agent performance varies; best practices from top agents can be shared.
+> ⚠️ **Note:** Ensure the `queries/` folder is mounted into the
+> container via `docker-compose.yml`. Otherwise, move it under
+> `data/queries/` so that it is accessible.
 
-✅ This pipeline can be extended for automation, monitoring, and visualization with BI tools like Tableau or Power BI.
+------------------------------------------------------------------------
+
+## 🧹 5. Stop & Clean Up
+
+To stop the container:
+
+``` bash
+docker compose down
+```
+
+------------------------------------------------------------------------
+
+### ✅ Workflow Summary in PWD
+
+1.  Clone the GitHub repo\
+2.  Run `docker compose up -d`\
+3.  Import CSV data using `\copy`\
+4.  Execute SQL queries from `.sql` files\
+5.  Run `docker compose down` when finished
