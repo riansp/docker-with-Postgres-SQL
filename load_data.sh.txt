@@ -1,0 +1,16 @@
+#!/bin/bash
+set -e
+
+CONTAINER=crm_postgres
+DB_USER=admin
+DB_NAME=crm_db
+
+# Copy CSV ke container
+docker cp CRMEvents.csv ${CONTAINER}:/tmp/CRMEvents.csv
+docker cp CRMCallCenterLogs.csv ${CONTAINER}:/tmp/CRMCallCenterLogs.csv
+
+# Import crm_events
+docker exec -i ${CONTAINER} psql -U ${DB_USER} -d ${DB_NAME} -c "\COPY crm_events FROM '/tmp/CRMEvents.csv' CSV HEADER;"
+
+# Import crm_call_logs
+docker exec -i ${CONTAINER} psql -U ${DB_USER} -d ${DB_NAME} -c "\COPY crm_call_logs FROM '/tmp/CRMCallCenterLogs.csv' CSV HEADER;"
