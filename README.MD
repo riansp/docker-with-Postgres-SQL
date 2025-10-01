@@ -19,6 +19,7 @@ PWD) to ingest CSV data and run analytical queries.
     │   └── init.sql
     │── README.md
 
+--> Push this folder and all project files (including `docker-compose.yml`, `load_data.sh`, and queries) to a GitHub repository.
 ------------------------------------------------------------------------
 
 ## ⚙️ 1. Setup Environment on Play with Docker (PWD)
